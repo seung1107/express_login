@@ -15,12 +15,13 @@ global.dbHandel = require('./database/dbHandel');
 global.db = mongoose.connect("mongodb://localhost:27017/nodedb"); //mongoDB의 use 
 
 var app = express();
-app.use(session({ 
+app.use(session({
 	secret: 'secret',
 	cookie:{ 
-		maxAge: 1000*60*30
+		maxAge: 1000*60*30 //쿠키 유효 기간 0.5시간
 	}
 }));
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.engine("html",require("ejs").__express); // or   app.engine("html",require("ejs").renderFile);

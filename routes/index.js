@@ -67,7 +67,6 @@ router.route("/register").get(function(req,res){    // 到达此路径则渲染r
 		}
 	});
 });
-
 /* GET home page. */
 router.get("/home",function(req,res){ 
 	if(!req.session.user){ 					//到达/home路径首先判断是否已经登录
@@ -79,9 +78,23 @@ router.get("/home",function(req,res){
 
 /* GET logout page. */
 router.get("/logout",function(req,res){    // 到达 /logout 路径则登出， session中user,error对象置空，并重定向到根路径
-	req.session.user = null;
-	req.session.error = null;
-	res.redirect("/");
+//	req.session.user = null;
+//	req.session.error = null;
+//	res.redirect("/");
+	var sess;
+	sess = req.session;
+    if(sess.username){
+        req.session.destroy(function(err){
+            if(err){
+                console.log(err);
+            }else{
+                res.redirect('/');
+            }
+        })
+    }else{
+        res.redirect('/');
+    }
+	
 });
 
 module.exports = router;
