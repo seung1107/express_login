@@ -1,10 +1,30 @@
 var express = require('express');
+var fs = require('fs');///////////
+var path = require('path');
+var multiparty = require('multiparty');
 var router = express.Router();
+var app = express();
 
 /* GET index page. */
-//router.get('/', function(req, res,next) {
-//  res.render('index', { title: 'Express' });
-//});
+router.get('/index', function(req, res,next) {
+  res.render('index', { title: 'Express' });
+});
+
+
+/*GET upload page. */
+//홈화면 보내주기
+app.get('/index', function(req, res, next) {
+	fs.readFile('./index.html', function(error, data) {
+		if(error != undefined) {
+			res.writeHead(404);
+			res.end();
+		} else {
+			res.writeHead(200, {'Content-Type': 'text/html'});
+			res.end(data);
+		}
+	});
+});
+
 
 /* GET login page. */
 router.route("/").get(function(req,res){    
@@ -12,21 +32,21 @@ router.route("/").get(function(req,res){
 }).post(function(req,res){ 					   
 	//get User info
 	var User = global.dbHandel.getModel('user');  
-	var uname = req.body.uname;				//获取post上来的 data数据中 uname的值
-	User.findOne({name:uname},function(err,doc){   //通过此model以用户名的条件 查询数据库中的匹配信息
-		if(err){ 										//错误就返回给原post处（login.html) 状态码为500的错误
+	var uname = req.body.uname;				
+	User.findOne({name:uname},function(err,doc){   
+		if(err){ 										
 			res.send(500);
 			console.log(err);
-		}else if(!doc){ 								//查询不到用户名匹配信息，则用户名不存在
+		}else if(!doc){ 						
 			req.session.error = '사용자가 존재하지 않습니다';
-			res.send(404);							//	状态码返回404
+			res.send(404);						
 		//	res.redirect("/login");
 		}else{ 
-			if(req.body.upwd != doc.password){ 	//查询到匹配用户名的信息，但相应的password属性不匹配
+			if(req.body.upwd != doc.password){ 	
 				req.session.error = "비밀번호가 올바르지 않습니다";
 				res.send(404);
 			//	res.redirect("/login");
-			}else{ 									//信息匹配成功，则将此对象（匹配到的user) 赋给session.user  并返回成功
+			}else{ 									
 				req.session.user = doc;
 				res.send(200);
 			//	res.redirect("/home");
@@ -35,15 +55,35 @@ router.route("/").get(function(req,res){
 	});
 });
 
+
+app.post('/file-upload', function(req, res) {
+    // get the temporary location of the file
+    var tmp_path = req.files.thumbnail.path;
+    // set where the file should actually exists - in this case it is in the "images" directory
+
+    var target_path = './' + req.files.thumbnail.name;
+    // move the file from the temporary location to the intended location
+
+    fs.rename(tmp_path, target_path, function(err) {
+        if (err) throw err;
+        // delete the temporary file, so that the explicitly set temporary upload dir does not get filled with unwanted files
+
+        fs.unlink(tmp_path, function() {
+            if (err) throw err;
+            res.send('File uploaded to: ' + target_path + ' - ' + req.files.thumbnail.size + ' bytes');
+        });
+    });
+});
+
+
 /* GET register page. */
-router.route("/register").get(function(req,res){    // 到达此路径则渲染register文件，并传出title值供 register.html使用
+router.route("/register").get(function(req,res){    
 	res.render("register",{title:'User register'});
 }).post(function(req,res){ 
-	 //这里的User就是从model中获取user对象，通过global.dbHandel全局方法（这个方法在app.js中已经实现)
 	var User = global.dbHandel.getModel('user');
 	var uname = req.body.uname;
 	var upwd = req.body.upwd;
-	User.findOne({name: uname},function(err,doc){   // 同理 /login 路径的处理方式
+	User.findOne({name: uname},function(err,doc){   
 		if(err){ 
 			res.send(500);
 			req.session.error =  '네트워크 오류';
@@ -52,7 +92,7 @@ router.route("/register").get(function(req,res){    // 到达此路径则渲染r
 			req.session.error = '아이디 중복';
 			res.send(500);
 		}else{ 
-			User.create({ 							// 创建一组user对象置入model
+			User.create({ 							
 				name: uname,
 				password: upwd
 			},function(err,doc){ 
@@ -63,21 +103,22 @@ router.route("/register").get(function(req,res){    // 到达此路径则渲染r
                         req.session.error = '등록 완료';
                         res.send(200);
                     }
-                  });
+                  }); 
 		}
 	});
 });
 /* GET home page. */
 router.get("/home",function(req,res){ 
-	if(!req.session.user){ 					//到达/home路径首先判断是否已经登录
+	if(!req.session.user){ 					
 		req.session.error = "로그인"
-		res.redirect("/login");				//未登录则重定向到 /login 路径
+		res.redirect("/login");				
 	}
-	res.render("home",{title:'Home'});         //已登录则渲染home页面
+	res.render("home",{title:'Home'});         
 });
 
+
 /* GET logout page. */
-router.get("/logout",function(req,res){    // 到达 /logout 路径则登出， session中user,error对象置空，并重定向到根路径
+router.get("/logout",function(req,res){    
 //	req.session.user = null;
 //	req.session.error = null;
 //	res.redirect("/");
@@ -97,4 +138,5 @@ router.get("/logout",function(req,res){    // 到达 /logout 路径则登出， 
 	
 });
 
+app.listen(3030);
 module.exports = router;

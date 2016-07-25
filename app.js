@@ -22,6 +22,7 @@ app.use(session({
 	}
 }));
 
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.engine("html",require("ejs").__express); // or   app.engine("html",require("ejs").renderFile);
@@ -33,7 +34,7 @@ app.set('view engine', 'html');
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(multer());
+//app.use(multer());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -53,8 +54,7 @@ app.use('/users', users);
 app.use('/login',routes); 
 app.use('/register',routes);
 app.use('/home',routes); 
-app.use("/logout",routes);
-
+app.use('/logout',routes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -87,5 +87,10 @@ app.use(function(err, req, res, next) {
   });
 });
 
+//app.post('/simpleupload',multer({dest:'/tmp/upload/'}).single('myfile'),function(req, res){
+//	console.log(req.body);
+//	console.log(req.file);
+//	res.status(204).end();
+//});
 
 module.exports = app;
